@@ -1,35 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState,useEffect } from "react";
+import "./App.css";
+import TodoForm from "./components/TodoForm";
+import TodoList from "./components/TodoList";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [todo, setTodo] = useState({ title: '', desc: '' });
+  // const [description, setDescription] = useState("");
+  const [todos, setTodos] = useState(JSON.parse(localStorage.getItem("todos")) || []);
+  const [editId, setEditId] = useState(0);
+
+  // useEffect(() => {
+  //   const storedTodos = JSON.parse(localStorage.getItem("todos")) || [];
+  //   console.log('xx',JSON.parse(localStorage.getItem("todos")))
+  //   setTodos(storedTodos);
+  // }, []);
+
+  useEffect(()=>{
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos])
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (editId) {
+      const editTodo = todos.find((i) => i.id === editId);
+      const updatedTodos = todos.map((t) => {
+        if (t.id === editId) {
+          return { id: t.id, todo: { title: todo.title, desc: todo.desc } }
+        }
+        else return t;
+      }
+      );
+      setTodos(updatedTodos);
+      setEditId(0);
+      setTodo({ title: '', desc: '' });
+      return;
+    }
+    if(todo.title === "") alert("Todo Name cannot be empty")
+    if (todo.title !== "") {
+      setTodos([{ id: `${Date.now()}`, todo }, ...todos]);
+      setTodo({ title: '', desc: '' });
+    }
+  };
+
+  const handleDelete = (id) => {
+    const delTodo = todos.filter((to) => to.id !== id);
+    setTodos([...delTodo]);
+  };
+
+  const handleEdit = (id) => {
+    const editTodo = todos.find((i) => i.id === id);
+    setTodo({ title: editTodo.todo.title, desc: editTodo.todo.desc });
+    setEditId(id);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="App">
+      <div className="container">
+        <h1>Todo List App</h1>
+        <TodoForm
+          handleSubmit={handleSubmit}
+          todo={todo}
+          editId={editId}
+          setTodo={setTodo}
+        />
 
-export default App
+        <TodoList
+          todos={todos}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default App;
